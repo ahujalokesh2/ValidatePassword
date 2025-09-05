@@ -1,58 +1,62 @@
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class ValidatePassword {
 
-    public static void passwordValidation(String pwd) throws Exception{
+    public static boolean passwordValidation(String pwd) {
         if(pwd==null){
-            throw new Exception("Password can't be null");
+            throw new IllegalArgumentException("Password can't be null");
         }
 
-        ExecutorService executorService = Executors.newFixedThreadPool(5);
+        int length = pwd.length();
+        boolean upper = false;
+        boolean lower = false;
+        boolean digit=false;
 
-        Callable<Boolean> checkLength = ()-> pwd.length()>8;
-        Callable<Boolean> checkLower = ()->pwd.chars().anyMatch(Character::isLowerCase);
-        Callable<Boolean> checkUpper = ()->pwd.chars().anyMatch(Character::isUpperCase);
-        Callable<Boolean> checkNumber = ()->pwd.chars().anyMatch(Character::isDigit);
+        for(char ch: pwd.toCharArray()){
+            if(Character.isUpperCase(ch)) upper=true;
+            if(Character.isLowerCase(ch)) lower=true;
+            if(Character.isDigit(ch)) digit=true;
 
-        Future<Boolean> length = executorService.submit(checkLength);
-        Future<Boolean> lower = executorService.submit(checkLower);
-        Future<Boolean> upper = executorService.submit(checkUpper);
-        Future<Boolean> number = executorService.submit(checkNumber);
-
-        int pass=0;
-        if(length.get())pass++;
-        if(lower.get())pass++;
-        if (upper.get())pass++;
-        if (number.get())pass++;
-
-        executorService.shutdown();
-
-        if(!lower.get()){
-            throw new Exception("At least 1 lower case is required");
+            if(upper && lower && digit)
+                break;
         }
 
-        if(pass<3){
-            throw  new Exception("Atleast 3 conditions should satisfy");
+        int resultMet=0;
+        if(length>8) resultMet++;
+        if(upper) resultMet++;
+        if (lower) resultMet++;
+        if(digit) resultMet++;
+
+        if(length<=8){
+            throw  new IllegalArgumentException("Password must be longer than 8 chars");
         }
 
-        System.out.println("Valid Password");
+        if(!upper){
+            throw  new IllegalArgumentException("Password must contain at least 1 uppercase");
+        }
+
+        if(!lower){
+            throw  new IllegalArgumentException("Password must contain at least 1 lowercase");
+        }
+
+        if(!digit){
+            throw  new IllegalArgumentException("Password must contain at least 1 digit");
+        }
 
 
-
-
+        return true;
 
     }
     public static void main(String[] args) {
 
+
         try {
-            passwordValidation("Pwd2765757");
+        boolean valid=  passwordValidation("Pwd123456");
+        System.out.println("Password is valid");
         }
-        catch (Exception e){
+        catch (IllegalArgumentException e){
             System.out.println(e.getMessage());
         }
     }
